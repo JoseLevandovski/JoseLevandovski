@@ -1,0 +1,46 @@
+# Nome da Actions:
+name: Snake Game
+
+# Controlador do tempo que sera feito a atualização dos arquivos.
+on:
+  schedule:
+    # Será atualizado a cada 5 horas.
+    - cron: "0 */5 * * *"
+
+# Permite executar na na lista de Actions (utilizado para testes de build).
+workflow_dispatch:
+
+# Regras
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      # Checks repo under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          ref: master
+
+      # Repositorio que será utilizado para gerar os arquivos.
+      - name: Generate Snake Game files
+        run: npx snk@0.0.18 ${{ github.repository_owner }} -o dist/github-contribution-grid-snake
+
+      - name: Show changes
+        run: git status
+
+      # Para as atualizações.
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git add -A
+          git commit -m "Update Snake Game"
+          git push
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: output
+          publish_dir: dist
